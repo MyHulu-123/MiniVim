@@ -1,0 +1,7 @@
+{
+  "markdown": {
+    "textWrap": "maintain"
+  },
+  "includes": ["**/*.md"],
+  "plugins": ["npm:@dprint/markdown@0.24.0"]
+}
