@@ -208,7 +208,7 @@ MiniVim 的哲学是模态编辑, 高效的编辑操作依托各模式间的切�
 
 在 Basic 部分, 你需要为 Command-line 模式实现以下的功能键:
 
-命令的键入：实现ascii码, Backspace, :wq, :q! :`{printable ascii}`,`<BS>`,`<CR>`,`<Esc>`
+命令的键入：实现ascii码, Backspace, :wq, :q!, :quit! , `{printable ascii}`,`<BS>`,`<CR>`,`<Esc>`
 
 - 若当前输入的指令为空字符串, 则不会有任何行为.
 - 若当前输入的指令非法, 在 Basic 部分中你可以直接忽略执行它. 在 Basic 部分中, 我们不会对未提及的命令评测.
