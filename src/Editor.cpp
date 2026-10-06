@@ -152,6 +152,7 @@ void Editor::HandleInsert(KeyEvent key) {
         window_.SetCursor(buffer_, {_row + 1, 0}, true);
         break;
     case KeyCode::Backspace:
+    case KeyCode::Delete:
         if(_column == 0 && _row > 0){
             window_.SetCursor(buffer_, {_row - 1, buffer_.GetLineAt(_row - 1).length()}, true);
             buffer_.JoinLine(_row - 1);
@@ -159,8 +160,7 @@ void Editor::HandleInsert(KeyEvent key) {
         else if(_column > 0){
             
             buffer_.EraseCharacter(_row, _column - 1);
-            _column = std::max((size_t)0, _column - 1);
-            window_.SetCursor(buffer_, {_row, _column}, true);
+            window_.SetCursor(buffer_, {_row, _column - 1}, true);
         }
         break;
     case KeyCode::Character:

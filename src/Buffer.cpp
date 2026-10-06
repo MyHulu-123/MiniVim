@@ -61,9 +61,9 @@ void Buffer::InsertCharacter(std::size_t row, std::size_t column, char value) {
 
 void Buffer::EraseCharacter(std::size_t row, std::size_t column) {
     //在第row行第col列删除一个value
-    if(row >= lines_.size() || row < 0)return;
+    if(row >= lines_.size())return;
     if(column >= lines_[row].length())return;
-    lines_[row].erase(column);
+    lines_[row].erase(column, 1);
 }
 
 void Buffer::SplitLine(std::size_t row, std::size_t column) {
