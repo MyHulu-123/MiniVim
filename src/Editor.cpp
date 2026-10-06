@@ -225,12 +225,13 @@ void Editor::ExecuteCommandLine() {
     //Basic
     std::vector<std::string> _out = Split(_trim);
     if(_out.size() == 0)return;
-    if(_out[0] == "q!"){
+    if(_out[0] == "q!" || _out[0] == "quit!"){
         running_ = false;
     }
     else if(_out[0] == "wq"){
         if(_out.size() > 1)SaveBuffer(_out[1]);
         else SaveBuffer();
+        running_ = false;
     }
 }
 
