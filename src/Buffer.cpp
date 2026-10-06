@@ -92,6 +92,7 @@ void Buffer::Save() {
 
 void Buffer::SaveAs(const std::filesystem::path& path) {
     Buffer::WriteTo(path);
+    path_ = path;
     saved_ = lines_;
 }
 

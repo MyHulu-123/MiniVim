@@ -77,14 +77,17 @@ void Window::SetCursor(const Buffer& buffer, Position position, bool allow_line_
 
 void Window::MoveLeft(const Buffer& buffer, std::size_t count) {
     //向左移动count个字符,最多到行首,并更新目标显示列
-    if(cursor_.column_ < count)cursor_.column_ = 0;
+    if(buffer.GetLineAt(cursor_.row_).empty())cursor_.column_ = 0;
+    else if(cursor_.column_ < count)cursor_.column_ = 0;
     else cursor_.column_ = cursor_.column_ - count;
     desired_column_ = cursor_.column_;
 }
 
 void Window::MoveRight(const Buffer& buffer, std::size_t count) {
     //向右移动count个字符,最多到最后一个字符,并更新目标显示列
-    cursor_.column_ = std::min(cursor_.column_ + count, buffer.GetLineAt(cursor_.row_).length() - 1);
+    if(buffer.GetLineAt(cursor_.row_).empty())cursor_.column_ = 0;
+    else if(cursor_.column_ + count >= buffer.GetLineAt(cursor_.row_).length())cursor_.column_ = buffer.GetLineAt(cursor_.row_).length() - 1;
+    else cursor_.column_ += count;
     desired_column_ = cursor_.column_;
 }
 
