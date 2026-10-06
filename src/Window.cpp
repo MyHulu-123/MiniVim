@@ -11,8 +11,8 @@ namespace sjtu {
 void Window::Resize(ScreenSize terminal_size) {
     //底部留一行给命令或提示,其余作为正文区域;正文行数和列数都至少取1
     //修改视口即可
-    viewport_.rows_ = std::max(viewport_.rows_, terminal_size.rows_ - 1);
-    viewport_.columns_ = std::max(viewport_.columns_, terminal_size.columns_);
+    viewport_.rows_ = std::max((size_t)1, terminal_size.rows_ - 1);
+    viewport_.columns_ = std::max((size_t)1, terminal_size.columns_);
 }
 
 void Window::ApplyMotion(const Buffer& buffer, Motion motion) {
@@ -43,9 +43,10 @@ void Window::EnsureCursorVisible(const Buffer& buffer) {
     //1. 光标高于或低于可见区域时,调整top_,使光标刚好进入区域
     //2. 把光标的字符下标换算成显示列,再用相同思路调整left_
     if(cursor_.row_ < viewport_.top_)viewport_.top_ = cursor_.row_;
-    else if(cursor_.row_ >= viewport_.top_ + viewport_.rows_)viewport_.top_ = cursor_.row_ + 1 - viewport_.rows_;
-    if(cursor_.column_ < viewport_.left_)viewport_.left_ = cursor_.column_;
-    else if(cursor_.column_ >= viewport_.left_ + viewport_.columns_)viewport_.left_ = cursor_.column_ + 1 - viewport_.columns_;
+    else if(cursor_.row_ > viewport_.top_ + viewport_.rows_ - 1)viewport_.top_ = cursor_.row_ - viewport_.rows_ + 1;
+    size_t _col = BufferColumnToRenderColumn(buffer.GetLineAt(cursor_.row_), cursor_.column_);
+    if(_col < viewport_.left_)viewport_.left_ = _col;
+    else if(_col > viewport_.left_ + viewport_.columns_ - 1)viewport_.left_ = _col - viewport_.columns_ + 1;
 }
 
 const Position& Window::GetCursor() const {
@@ -64,8 +65,11 @@ void Window::SetCursor(const Buffer& buffer, Position position, bool allow_line_
     //2. 用新位置更新上下移动时的目标显示列
     //3. 调整视口,保证光标可见
     cursor_.row_ = std::clamp(position.row_, (size_t)0, buffer.GetLineCount() - 1);
-    if(allow_line_end)cursor_.column_ = std::clamp(position.column_, (size_t)0, buffer.GetLineAt(cursor_.row_).length());
-    else cursor_.column_ = std::clamp(position.column_, (size_t)0, buffer.GetLineAt(cursor_.row_).length() - 1);
+    if(buffer.GetLineAt(cursor_.row_).length() == 0)cursor_.column_ = 0;
+    else{
+        if(allow_line_end)cursor_.column_ = std::clamp(position.column_, (size_t)0, buffer.GetLineAt(cursor_.row_).length());
+        else cursor_.column_ = std::clamp(position.column_, (size_t)0, buffer.GetLineAt(cursor_.row_).length() - 1);
+    }
     desired_column_ = cursor_.column_;
     EnsureCursorVisible(buffer);
 }
@@ -73,7 +77,8 @@ void Window::SetCursor(const Buffer& buffer, Position position, bool allow_line_
 
 void Window::MoveLeft(const Buffer& buffer, std::size_t count) {
     //向左移动count个字符,最多到行首,并更新目标显示列
-    cursor_.column_ = std::max(cursor_.column_ - count, (unsigned long)0);
+    if(cursor_.column_ < count)cursor_.column_ = 0;
+    else cursor_.column_ = cursor_.column_ - count;
     desired_column_ = cursor_.column_;
 }
 
@@ -87,15 +92,23 @@ void Window::MoveRight(const Buffer& buffer, std::size_t count) {
 void Window::MoveUp(const Buffer& buffer, std::size_t count) {
     //先算目标行,最多到第一行,再将期望的显示列换算成目标行的字符下标
     //经过短行时不要更新desired_screen_column_,这样继续移动到长行时能回到原来的列
-    cursor_.row_ = std::max(cursor_.row_ - count, (unsigned long)0);
-    cursor_.column_ = std::max(desired_column_, buffer.GetLineAt(cursor_.row_).length() - 1);
+    if(cursor_.row_ < count)cursor_.row_ = 0;
+    else cursor_.row_ = cursor_.row_ - count;
+    if(buffer.GetLineAt(cursor_.row_).length() == 0){
+        cursor_.column_ = 0;
+    }
+    else cursor_.column_ = std::min(desired_column_, buffer.GetLineAt(cursor_.row_).length() - 1);
 }
 
 void Window::MoveDown(const Buffer& buffer, std::size_t count) {
     //先算目标行,最多到最后一行,再根据desired_screen_column_寻找目标字符
     //与向上移动一样,保留期望显示列
-    cursor_.row_ = std::min(cursor_.row_ + count, buffer.GetLineCount() - 1);
-    cursor_.column_ = std::max(desired_column_, buffer.GetLineAt(cursor_.row_).length() - 1);
+    if(cursor_.row_ + count >= buffer.GetLineCount())cursor_.row_ = buffer.GetLineCount() - 1;
+    else cursor_.row_ = cursor_.row_ + count;
+    if(buffer.GetLineAt(cursor_.row_).length() == 0){
+        cursor_.column_ = 0;
+    }
+    else cursor_.column_ = std::min(desired_column_, buffer.GetLineAt(cursor_.row_).length() - 1);
 }
 
 } // namespace sjtu

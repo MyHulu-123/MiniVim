@@ -12,12 +12,33 @@ EditorAction NormalModeParser::Feed(KeyEvent key) {
     if (key.code_ == KeyCode::Character) {
         auto value = key.value_;
         switch (value) {
-        //你需要填写这里
+        case 'h':
+            return GenerateMotion(Motion::Left);
+            break;
+        case 'j':
+            return GenerateMotion(Motion::Down);
+            break;
+        case 'k':
+            return GenerateMotion(Motion::Up);
+            break;
+        case 'l':
+            return GenerateMotion(Motion::Right);
+            break;
+        case 'i':
+            return GenerateCommand(ActionKind::InsertBefore);
+            break;
+        case 'a':
+            return GenerateCommand(ActionKind::InsertAfter);
+            break;
+        case ':':
+            return GenerateCommand(ActionKind::EnterCommandLine);
+            break;
         default:
             break;
         }
         return {};
     }
+
 
     //switch (key.code_) {
     //case KeyCode::ArrowLeft:

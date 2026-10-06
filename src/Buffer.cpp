@@ -54,14 +54,14 @@ bool Buffer::IsModified() const {
 
 void Buffer::InsertCharacter(std::size_t row, std::size_t column, char value) {
     //在第row行第col列插入一个value, 注意越界检查
-    if(row >= lines_.size())return;
+    if(row >= lines_.size() || row < 0)return;
     if(column > lines_[row].length())return;
     lines_[row].insert(column,1,value);
 }
 
 void Buffer::EraseCharacter(std::size_t row, std::size_t column) {
     //在第row行第col列删除一个value
-    if(row >= lines_.size())return;
+    if(row >= lines_.size() || row < 0)return;
     if(column >= lines_[row].length())return;
     lines_[row].erase(column);
 }

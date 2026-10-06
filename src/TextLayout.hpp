@@ -36,8 +36,7 @@ inline size_t RenderColumnToBufferColumn(std::string_view line, size_t render_co
             return index;
         }
         current = next;
-    }
-
+    }   
     return line.size();
 }
 

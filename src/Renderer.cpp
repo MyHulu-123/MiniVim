@@ -32,6 +32,7 @@ std::string Renderer::Render(const Buffer& buffer, const Window& window, const R
     //4. 根据当前模式计算光标的屏幕位置,追加定位序列并重新显示光标
     //你应该区分我们的Cursor光标(它代表当前用户在修改文件的哪个位置)和终端显示的白色亮条,白色亮条在屏幕中的位置是由光标位置和视口位置计算的
     auto& viewport = window.GetViewport();
+    auto& cursor = window.GetCursor();
     auto width = std::max<std::size_t>(viewport.columns_, 1);
 
     std::string frame;
@@ -41,17 +42,24 @@ std::string Renderer::Render(const Buffer& buffer, const Window& window, const R
 
     for (std::size_t screen_row = 0; screen_row < viewport.rows_; ++screen_row) {
        //这里是提示2中的部分
+        if(viewport.top_ + screen_row < buffer.GetLineCount()){
+            std::string _expand = ExpandForDisplay(buffer.GetLineAt(viewport.top_ + screen_row));
+            AppendClearedLine(frame, _expand.substr(std::min(viewport.left_, _expand.length())), width, true);
+        }
+        else{
+            AppendClearedLine(frame, "~", width, true);
+        }
     }
 
     std::string bottom;
-    //if (state.mode_ == Mode::CommandLine) {
-        //bottom = ":" + state.command_;
-    //} else if (!state.message_.empty()) {
-        //bottom = state.message_;
-    //} else if (state.mode_ == Mode::Insert) {
-        //bottom = "-- INSERT --";
-    //}
-    //AppendClearedLine(frame, bottom, width, false);
+    if (state.mode_ == Mode::CommandLine) {
+        bottom = ":" + state.command_;
+    } else if (!state.message_.empty()) {
+        bottom = state.message_;
+    } else if (state.mode_ == Mode::Insert) {
+        bottom = "-- INSERT --";
+    }
+    AppendClearedLine(frame, bottom, width, false);
     //这里是提示3中的部分
     //我们只会在CommandMode的时候检查一下底部的命令内容,在NormalMode不会看底部,所以message你可以随意写
 
@@ -59,6 +67,8 @@ std::string Renderer::Render(const Buffer& buffer, const Window& window, const R
     std::size_t cursor_column{0};
 
     //计算cursor_row和cursor_column即可    
+    cursor_row = cursor.row_ - viewport.top_ + 1;
+    cursor_column = BufferColumnToRenderColumn(buffer.GetLineAt(cursor_row - 1), cursor.column_) - viewport.left_ + 1;
 
     frame += CursorSequence(cursor_row, cursor_column);
     frame += "\x1b[?25h";
@@ -68,6 +78,19 @@ std::string Renderer::Render(const Buffer& buffer, const Window& window, const R
 std::string Renderer::ExpandForDisplay(std::string_view line) {
     //从左到右扫描buffer中一整行的实际内容,并扩展到render应该输出的视图
     //你应该在Render中调用这个函数,并把函数返回的结果按照视口剪切用于Render的某些行
-    return {};
+    size_t _col = 0;
+    std::string display = "";
+    for(int i = 0; i < line.length(); i++){
+        if(line[i] == '\t'){
+            size_t _space = NextScreenColumn(_col, '\t');
+            for(int j = 0; j < _space - _col; j++)display += ' ';
+            _col = _space;
+        }
+        else{
+            display += line[i];
+            _col++;
+        }
+    }
+    return display;
 }
 } // namespace sjtu
