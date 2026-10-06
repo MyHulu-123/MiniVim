@@ -102,7 +102,8 @@ void Buffer::WriteTo(const std::filesystem::path& path) const {
     if(path.empty())return;
     std::ofstream out(path);
     for (std::size_t i = 0; i < lines_.size(); i++){
-        out << lines_[i] << "\n";
+        out << lines_[i];
+        if(i + 1 < lines_.size())out << '\n';
     }
 }
 
