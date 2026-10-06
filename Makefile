@@ -1,4 +1,4 @@
-TARGET := MiniVim
+TARGET := code
 BUILD_DIR := build
 
 SOURCES := $(wildcard src/*.cpp)
