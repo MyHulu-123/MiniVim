@@ -101,11 +101,18 @@ void Buffer::WriteTo(const std::filesystem::path& path) const {
     //实际将缓冲区中的内容写入path指向的文件中
     if(path.empty())return;
     std::ofstream out(path);
+    std::string _content = "";
     for (std::size_t i = 0; i < lines_.size(); i++){
-        out << lines_[i];
-        if(i + 1 < lines_.size())out << '\n';
-        else if(!lines_[lines_.size() - 1].empty())out << '\n';
+        if(i + 1 < lines_.size())_content += lines_[i] + '\n';
+        else{
+            _content += lines_[i];
+        }
     }
+    if(_content.empty())return;
+    else{
+        if(_content.back() != '\n')_content += '\n';
+    }
+    out << _content;
 }
 
 } // namespace sjtu
