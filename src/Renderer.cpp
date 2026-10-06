@@ -67,9 +67,14 @@ std::string Renderer::Render(const Buffer& buffer, const Window& window, const R
     std::size_t cursor_column{0};
 
     //计算cursor_row和cursor_column即可    
-    cursor_row = cursor.row_ - viewport.top_ + 1;
-    cursor_column = BufferColumnToRenderColumn(buffer.GetLineAt(cursor_row - 1), cursor.column_) - viewport.left_ + 1;
-
+    if(state.mode_ == Mode::CommandLine){
+        cursor_row = viewport.rows_ + 1;
+        cursor_column = bottom.length() + 1;
+    }
+    else{
+        cursor_row = cursor.row_ - viewport.top_ + 1;
+        cursor_column = BufferColumnToRenderColumn(buffer.GetLineAt(cursor_row - 1), cursor.column_) - viewport.left_ + 1;
+    }
     frame += CursorSequence(cursor_row, cursor_column);
     frame += "\x1b[?25h";
     return frame;
