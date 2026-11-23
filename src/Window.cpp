@@ -23,9 +23,11 @@ void Window::ApplyMotion(const Buffer& buffer, Motion motion, size_t count) {
     {
     case Motion::Left:
         MoveLeft(buffer, count == 0 ? 1 : count);
+        RefreshCurswant(buffer);
         break;
     case Motion::Right:
         MoveRight(buffer, count == 0 ? 1 : count);
+        RefreshCurswant(buffer);
         break;
     case Motion::Up:
         MoveUp(buffer, count == 0 ? 1 : count);
@@ -35,42 +37,54 @@ void Window::ApplyMotion(const Buffer& buffer, Motion motion, size_t count) {
         break;
     case Motion::Next_Word_Start:
         MoveNextWordStart(buffer, count == 0 ? 1 : count);
+        RefreshCurswant(buffer);
         break;
     case Motion::Pre_Word_End:
         MovePreWordEnd(buffer, count == 0 ? 1 : count);
+        RefreshCurswant(buffer);
         break;
     case Motion::Next_Word_End:
         MoveNextWordEnd(buffer, count == 0 ? 1 : count);
+        RefreshCurswant(buffer);
         break;
     case Motion::Pre_Word_Start:
         MovePreWordStart(buffer, count == 0 ? 1 : count);
+        RefreshCurswant(buffer);
         break;
     case Motion::Line_Start:
         MoveLineStart();
+        RefreshCurswant(buffer);
         break;
     case Motion::Line_First_None_Empty:
         MoveLineFirstNoneEmpty(buffer);
+        RefreshCurswant(buffer);
         break;
     case Motion::Line_End:
         MoveLineEnd(buffer, count);
         break;
     case Motion::Next_WORD_Start:
         MoveNextWORDStart(buffer, count == 0 ? 1 : count);
+        RefreshCurswant(buffer);
         break;
     case Motion::Pre_WORD_End:
         MovePreWORDEnd(buffer, count == 0 ? 1 : count);
+        RefreshCurswant(buffer);
         break;
     case Motion::Next_WORD_End:
         MoveNextWORDEnd(buffer, count == 0 ? 1 : count);
+        RefreshCurswant(buffer);
         break;
     case Motion::Pre_WORD_Start:
         MovePreWORDStart(buffer, count == 0 ? 1 : count);
+        RefreshCurswant(buffer);
         break;
     case Motion::First_Line:
         MoveFirstLine(buffer, count);
+        RefreshCurswant(buffer);
         break;
     case Motion::Last_line:
         MoveLastLine(buffer, count);
+        RefreshCurswant(buffer);
         break;
     default:
         break;
@@ -109,7 +123,12 @@ void Window::SetCursor(const Buffer& buffer, Position position, bool allow_line_
         else cursor_.column_ = std::clamp(position.column_, (size_t)0, buffer.GetLineAt(cursor_.row_).length() - 1);
     }
     desired_column_ = cursor_.column_;
+    RefreshCurswant(buffer);
     EnsureCursorVisible(buffer);
+}
+
+void Window::RefreshCurswant(const Buffer& buffer){
+    desired_column_ = BufferColumnToRenderColumn(buffer.GetLineAt(cursor_.row_), cursor_.column_);
 }
 
 void Window::MoveLeft(const Buffer& buffer, std::size_t count) {
@@ -117,7 +136,7 @@ void Window::MoveLeft(const Buffer& buffer, std::size_t count) {
     if(buffer.GetLineAt(cursor_.row_).empty())cursor_.column_ = 0;
     else if(cursor_.column_ < count)cursor_.column_ = 0;
     else cursor_.column_ = cursor_.column_ - count;
-    desired_column_ = cursor_.column_;
+    RefreshCurswant(buffer);
 }
 
 void Window::MoveRight(const Buffer& buffer, std::size_t count) {
@@ -125,7 +144,7 @@ void Window::MoveRight(const Buffer& buffer, std::size_t count) {
     if(buffer.GetLineAt(cursor_.row_).empty())cursor_.column_ = 0;
     else if(cursor_.column_ + count >= buffer.GetLineAt(cursor_.row_).length())cursor_.column_ = buffer.GetLineAt(cursor_.row_).length() - 1;
     else cursor_.column_ += count;
-    desired_column_ = cursor_.column_;
+    RefreshCurswant(buffer);
 }
 
 void Window::MoveUp(const Buffer& buffer, std::size_t count) {
@@ -136,7 +155,7 @@ void Window::MoveUp(const Buffer& buffer, std::size_t count) {
     if(buffer.GetLineAt(cursor_.row_).length() == 0){
         cursor_.column_ = 0;
     }
-    else cursor_.column_ = std::min(desired_column_, buffer.GetLineAt(cursor_.row_).length() - 1);
+    else cursor_.column_ = std::min(RenderColumnToBufferColumn(buffer.GetLineAt(cursor_.row_), desired_column_), buffer.GetLineAt(cursor_.row_).length() - 1);
 }
 
 void Window::MoveDown(const Buffer& buffer, std::size_t count) {
@@ -145,7 +164,7 @@ void Window::MoveDown(const Buffer& buffer, std::size_t count) {
     if(buffer.GetLineAt(cursor_.row_).length() == 0){
         cursor_.column_ = 0;
     }
-    else cursor_.column_ = std::min(desired_column_, buffer.GetLineAt(cursor_.row_).length() - 1);
+    else cursor_.column_ = std::min(RenderColumnToBufferColumn(buffer.GetLineAt(cursor_.row_), desired_column_), buffer.GetLineAt(cursor_.row_).length() - 1);
 }
 
 void Window::MoveNextWordStart(const Buffer& buffer, std::size_t count){
@@ -158,7 +177,7 @@ void Window::MoveNextWordStart(const Buffer& buffer, std::size_t count){
         count--;
     }
     cursor_ = p;
-    desired_column_ = cursor_.column_;
+    RefreshCurswant(buffer);
 }
 
 void Window::MoveNextWORDStart(const Buffer& buffer, std::size_t count){
@@ -171,7 +190,7 @@ void Window::MoveNextWORDStart(const Buffer& buffer, std::size_t count){
         count--;
     }
     cursor_ = p;
-    desired_column_ = cursor_.column_;
+    RefreshCurswant(buffer);
 }
 
 void Window::MovePreWordStart(const Buffer& buffer, std::size_t count){
@@ -192,18 +211,17 @@ void Window::MovePreWordStart(const Buffer& buffer, std::size_t count){
     std::string_view str = buffer.GetLineAt(p.row_);
     if(str.empty()){
         cursor_ = p;
-        desired_column_ = cursor_.column_;
-        return;
     }
-    for(;p.column_ > 0; p.column_--){
-        if(GetPosCharType(buffer, p) != GetPosCharType(buffer, {p.row_, p.column_ - 1})){
-            cursor_ = p;
-            desired_column_ = cursor_.column_;
-            return;
+    else{
+        for(;p.column_ > 0; p.column_--){
+            if(GetPosCharType(buffer, p) != GetPosCharType(buffer, {p.row_, p.column_ - 1})){
+                cursor_ = p;
+                break;
+            }
         }
+        cursor_ = p;
     }
-    cursor_ = p;
-    desired_column_ = cursor_.column_;
+    RefreshCurswant(buffer);
 }
 
 void Window::MovePreWORDStart(const Buffer& buffer, std::size_t count){
@@ -224,18 +242,18 @@ void Window::MovePreWORDStart(const Buffer& buffer, std::size_t count){
     std::string_view str = buffer.GetLineAt(p.row_);
     if(str.empty()){
         cursor_ = p;
-        desired_column_ = cursor_.column_;
+        RefreshCurswant(buffer);
         return;
     }
     for(;p.column_ > 0; p.column_--){
         if(CharTypeForWord::Empty == GetPosCharType(buffer, {p.row_, p.column_ - 1})){
             cursor_ = p;
-            desired_column_ = cursor_.column_;
+            RefreshCurswant(buffer);
             return;
         }
     }
     cursor_ = p;
-    desired_column_ = cursor_.column_;
+    RefreshCurswant(buffer);
 }
 
 void Window::MoveNextWordEnd(const Buffer& buffer, std::size_t count){
@@ -256,18 +274,18 @@ void Window::MoveNextWordEnd(const Buffer& buffer, std::size_t count){
     std::string_view str = buffer.GetLineAt(p.row_);
     if(str.empty()){
         cursor_ = p;
-        desired_column_ = cursor_.column_;
+        RefreshCurswant(buffer);
         return;
     }
     for(;p.column_ + 1 < str.length(); p.column_++){
         if(GetPosCharType(buffer, p) != GetPosCharType(buffer, {p.row_, p.column_ + 1})){
             cursor_ = p;
-            desired_column_ = cursor_.column_;
+            RefreshCurswant(buffer);
             return;
         }
     }
     cursor_ = p;
-    desired_column_ = cursor_.column_;
+    RefreshCurswant(buffer);
 }
 
 void Window::MoveNextWORDEnd(const Buffer& buffer, std::size_t count){
@@ -288,18 +306,18 @@ void Window::MoveNextWORDEnd(const Buffer& buffer, std::size_t count){
     std::string_view str = buffer.GetLineAt(p.row_);
     if(str.empty()){
         cursor_ = p;
-        desired_column_ = cursor_.column_;
+        RefreshCurswant(buffer);
         return;
     }
     for(;p.column_ + 1 < str.length(); p.column_++){
         if(CharTypeForWord::Empty == GetPosCharType(buffer, {p.row_, p.column_ + 1})){
             cursor_ = p;
-            desired_column_ = cursor_.column_;
+            RefreshCurswant(buffer);
             return;
         }
     }
     cursor_ = p;
-    desired_column_ = cursor_.column_;
+    RefreshCurswant(buffer);
 }
 
 void Window::MovePreWordEnd(const Buffer& buffer, std::size_t count){
@@ -312,7 +330,7 @@ void Window::MovePreWordEnd(const Buffer& buffer, std::size_t count){
         count--;
     }
     cursor_ = p;
-    desired_column_ = cursor_.column_;
+    RefreshCurswant(buffer);
 }
 
 void Window::MovePreWORDEnd(const Buffer& buffer, std::size_t count){
@@ -325,7 +343,7 @@ void Window::MovePreWORDEnd(const Buffer& buffer, std::size_t count){
         count--;
     }
     cursor_ = p;
-    desired_column_ = cursor_.column_;
+    RefreshCurswant(buffer);
 }
 
 bool Window::Former(const Buffer& buffer, Position& pos, bool ignoreEmptyLine, bool isWORD){
@@ -414,23 +432,23 @@ bool Window::Advance(const Buffer& buffer, Position& pos, bool ignoreEmptyLine, 
 
 void Window::MoveLineStart(){
     cursor_.column_ = 0;
-    desired_column_ = 0;
+    
 }
 
 void Window::MoveLineFirstNoneEmpty(const Buffer& buffer){
     std::string_view str = buffer.GetLineAt(cursor_.row_);
     if(str.empty()){
-        cursor_.column_ = desired_column_ = 0;
+        cursor_.column_ = 0;
         return;
     }
     size_t p = 0;
     for(; p < str.length(); p++){
         if(str[p] != ' '){
-            cursor_.column_ = desired_column_ = p;
+            cursor_.column_ = p;
             return;
         }
     }
-    cursor_.column_ = desired_column_ = p - 1;
+    cursor_.column_ = p - 1;
 }
 
 void Window::MoveLineEnd(const Buffer& buffer, std::size_t count){

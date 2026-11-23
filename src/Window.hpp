@@ -45,6 +45,7 @@ private:
     void MoveFirstLine(const Buffer& buffer, size_t count);
     void MoveLastLine(const Buffer& buffer, size_t count);
 
+    void RefreshCurswant(const Buffer& buffer);
 
     bool Former(const Buffer& buffer, Position& pos, bool ignoreEmptyLine, bool isWORD);
     bool Advance(const Buffer& buffer, Position& pos, bool ignoreEmptyLine, bool isWORD);
