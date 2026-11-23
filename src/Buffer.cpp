@@ -38,7 +38,13 @@ const std::string& Buffer::GetLineAt(std::size_t row) const {
     return lines_[row];
 }
 
+const std::string& Buffer::GetLastLine() const{
+    return lines_[lines_.size() - 1];
+}
 
+const std::string& Buffer::GetFirstLine() const{
+    return lines_[0];
+}
 std::string Buffer::GetDisplayName() const {
     //返回文件名,若是新文件,返回"[No Name]"
     if(path_.empty()){

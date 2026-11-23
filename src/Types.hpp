@@ -31,6 +31,12 @@ struct Viewport {
     size_t columns_{1};
 };
 
+enum class CharTypeForWord {
+    Char,//字母数字下划线
+    Empty,//空格
+    Punc,//标点
+};
+
 //分别表示普通模式、插入模式和冒号命令行模式
 enum class Mode {
     Normal,
@@ -39,13 +45,37 @@ enum class Mode {
 };
 
 //Basic中支持的四个移动方向,可以由hjkl等按键生成
+enum class Operator {
+    Delete,
+    Replace,
+    Change,
+    Yank,
+    Visual_Select,
+};
 enum class Motion {
     Left,
     Down,
     Up,
     Right,
+    Next_Word_Start,
+    Pre_Word_Start,
+    Next_Word_End,
+    Pre_Word_End,
+    Next_WORD_Start,
+    Pre_WORD_Start,
+    Next_WORD_End,
+    Pre_WORD_End,
+    Line_Start,
+    Line_First_None_Empty,
+    Line_End,
+    First_Line,
+    Last_line,
+};
+enum class Modifier{
+    Inside,
+    Around,
 };
 
 } // namespace sjtu
 
-#endif // MINIVIM_TYPES_HPP
+#endif // MINIVIM_TYPES_HPP;

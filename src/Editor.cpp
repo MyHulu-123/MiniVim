@@ -109,7 +109,8 @@ void Editor::Execute(const EditorAction& action) {
         return;
     case ActionKind::Move:
         //交给Window吧
-        window_.ApplyMotion(buffer_, action.motion_.value());
+        if(action.count_.has_value()) window_.ApplyMotion(buffer_, action.motion_.value(), action.count_.value());
+        else window_.ApplyMotion(buffer_, action.motion_.value());
         return;
     case ActionKind::InsertBefore:
         //进入InsertMode,Editor自己就有对应方法
