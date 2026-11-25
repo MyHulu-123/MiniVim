@@ -94,6 +94,8 @@ void Editor::ProcessKey(KeyEvent key) {
     case Mode::Insert:
         HandleInsert(key);
         break;
+    case Mode::Search:
+        break;
     case Mode::Normal:
         message_ = "";
         Execute(normal_parser_.Feed(key));
@@ -103,6 +105,7 @@ void Editor::ProcessKey(KeyEvent key) {
 }
 
 void Editor::Execute(const EditorAction& action) {
+    Position _cursor = window_.GetCursor();
     //根据Action的种类调用对应模块
     switch (action.kind_) {
     case ActionKind::None:
@@ -114,16 +117,17 @@ void Editor::Execute(const EditorAction& action) {
         return;
     case ActionKind::InsertBefore:
         //进入InsertMode,Editor自己就有对应方法
-        EnterInsert(window_.GetCursor());
+        EnterInsert(_cursor);
         return;
-    case ActionKind::InsertAfter: {
+    case ActionKind::InsertAfter:
         //从当前Char之后进入InsertMode
         //特判:如果Buffer表示当前Cursor所在的行是空的怎么办?
-        Position _cursor = window_.GetCursor();
         _cursor.column_++;
         EnterInsert(_cursor);
         return;
-    }
+    case ActionKind::Search: 
+        
+        return;
     case ActionKind::EnterCommandLine:
         //进入Command Mode
         //记得清空当前的message之类的遗留状态

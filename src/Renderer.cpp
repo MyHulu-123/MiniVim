@@ -73,7 +73,7 @@ std::string Renderer::Render(const Buffer& buffer, const Window& window, const R
     }
     else{
         cursor_row = cursor.row_ - viewport.top_ + 1;
-        cursor_column = BufferColumnToRenderColumn(buffer.GetLineAt(cursor_row - 1), cursor.column_) - viewport.left_ + 1;
+        cursor_column = BufferColumnToRenderColumn(buffer.GetLineAt(cursor.row_), cursor.column_) - viewport.left_ + 1;
     }
     frame += CursorSequence(cursor_row, cursor_column);
     frame += "\x1b[?25h";

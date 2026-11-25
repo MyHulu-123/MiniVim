@@ -60,7 +60,7 @@ void Window::ApplyMotion(const Buffer& buffer, Motion motion, size_t count) {
         RefreshCurswant(buffer);
         break;
     case Motion::Line_End:
-        MoveLineEnd(buffer, count);
+        MoveLineEnd(buffer, count == 0 ? 1 : count);
         break;
     case Motion::Next_WORD_Start:
         MoveNextWORDStart(buffer, count == 0 ? 1 : count);
@@ -452,15 +452,14 @@ void Window::MoveLineFirstNoneEmpty(const Buffer& buffer){
 }
 
 void Window::MoveLineEnd(const Buffer& buffer, std::size_t count){
+    desired_column_ = curs_Max;
     if(cursor_.row_ + 1 == buffer.GetLineCount() && count > 1){
-        desired_column_ = curs_Max;
         return;
     }
     MoveDown(buffer, count - 1);
     std::string_view str = buffer.GetLineAt(cursor_.row_);
     if(str.empty())cursor_.column_ = 0;
     else cursor_.column_ = str.length() - 1;
-    desired_column_ = curs_Max;
 }
 
 void Window::MoveFirstLine(const Buffer& buffer, std::size_t count){
@@ -481,7 +480,7 @@ CharTypeForWord Window::GetPosCharType(const Buffer& buffer, const Position& pos
     std::string_view str = buffer.GetLineAt(pos.row_);
     if(pos.column_ == str.length())return CharTypeForWord::Empty;
     char c = str[pos.column_];
-    if(c == ' ')return CharTypeForWord::Empty;
+    if(c == ' ' || c == '\t')return CharTypeForWord::Empty;
     if((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))return CharTypeForWord::Char;
     return CharTypeForWord::Punc;
 }   

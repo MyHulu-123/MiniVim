@@ -14,6 +14,9 @@ struct Position {
     //Buffer中的行号和字符下标;插入模式的column_可以等于该行长度
     size_t row_{0};
     size_t column_{0};
+    bool operator==(const Position& other) const{
+        return row_ == other.row_ && column_ == other.column_;
+    }
 };
 
 struct ScreenSize {
@@ -42,6 +45,7 @@ enum class Mode {
     Normal,
     Insert,
     CommandLine,
+    Search,
 };
 
 //Basic中支持的四个移动方向,可以由hjkl等按键生成
@@ -74,6 +78,16 @@ enum class Motion {
 enum class Modifier{
     Inside,
     Around,
+};
+enum class SearchDirection {
+    Forward,
+    Backward,
+};
+enum class Search{
+    SearchForward,
+    SearchBackward,
+    SameDirection,
+    OppositeDirection,
 };
 
 } // namespace sjtu

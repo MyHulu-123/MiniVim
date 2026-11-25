@@ -38,6 +38,7 @@ struct EditorAction {
     std::optional<Motion> motion_{};
     std::optional<size_t> count_{};
     std::optional<char> char_{};
+    std::optional<Search> search_{};
     //当kind_ = Move时,motion_才有意义,在Basic中表示移动方向(Motion的定义你可以右键跳转查看)
     //EditorAction和ActionKind分层设计是为了可扩展性,Basic部分的命令都是单个按键,但在Advanced部分中你会遇到多按键命令的情况,
     //这时候就会遇到按键的pending,比如dw,你可以先构造一个EditorAction存储kind_=Delete,等用户输入motion后令motion=w.
@@ -59,13 +60,19 @@ private:
     EditorAction Generate();
     EditorAction GenerateMotion(Motion motion);
     EditorAction GenerateCommand(ActionKind kind);
+    EditorAction GenerateSearch(Search search);
+
     void reset();
 
     ActionKind kind_{ActionKind::None};
+    bool has_count = false;
     size_t count_[5]{0};//临时记录count字段
     size_t cnt_{0};
+    std::optional<char> last_digit;
+    std::optional<char> pending_seq;
     std::optional<Operator> operator_{};
     std::optional<Motion> motion_{};
+    std::optional<Search> search_{};
     std::optional<char> pre_{}; //上一次输入的内容
 
     const size_t COUNT_MAX = 1000000;

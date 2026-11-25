@@ -14,6 +14,7 @@ Editor负责协调各个模块,保存当前模式,并根据输入调用Buffer和
 #include "Renderer.hpp"
 #include "Terminal.hpp"
 #include "Types.hpp"
+#include "Searcher.hpp"
 #include "Window.hpp"
 
 
@@ -50,17 +51,24 @@ private:
     void ExecuteCommandLine();
     void LeaveCommandLine();
 
+    void HandleSearch(KeyEvent key);
+    void ExecuteSearch();
+    void LeaveSearch();
+
     bool SaveBuffer(const std::filesystem::path& path = {});
 
     Buffer buffer_; //文件的实际内容
     Terminal terminal_; //读取按键,向终端输出,管理终端设置
     Window window_; //光标和当前可见区域
     Renderer renderer_; //根据内容和状态生成要输出的画面
+    Searcher searcher_; //字符串查找器和标记
     NormalModeParser normal_parser_; //把Normal模式的按键转换成EditorAction
 
     Mode mode_{Mode::Normal}; //当前编辑模式
     std::string command_; //命令行模式下已经输入的内容,不含开头的冒号
     std::string message_; //底部的提示或错误信息
+    SearchDirection search_dir_; //搜索方向
+    std::string search_; //要搜索的字符串
     bool running_{true}; //设为false后结束主循环
 };
 
